@@ -9,9 +9,10 @@ export function checkPermi(value) {
   if (value && value instanceof Array && value.length > 0) {
     const permissions = store.getters && store.getters.permissions
     const permissionDatas = value
+    const all_permission = "*:*:*";
 
     const hasPermission = permissions.some(permission => {
-      return permissionDatas.includes(permission)
+      return all_permission == permissions || permissionDatas.includes(permission)
     })
 
     if (!hasPermission) {
