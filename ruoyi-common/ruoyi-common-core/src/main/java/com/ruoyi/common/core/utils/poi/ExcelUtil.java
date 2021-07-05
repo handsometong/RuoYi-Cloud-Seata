@@ -20,10 +20,12 @@ import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.apache.poi.ss.usermodel.DataValidationHelper;
 import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -34,7 +36,9 @@ import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFDataValidation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +49,8 @@ import com.ruoyi.common.core.annotation.Excels;
 import com.ruoyi.common.core.text.Convert;
 import com.ruoyi.common.core.utils.DateUtils;
 import com.ruoyi.common.core.utils.StringUtils;
+import com.ruoyi.common.core.utils.file.FileTypeUtils;
+import com.ruoyi.common.core.utils.file.ImageUtils;
 import com.ruoyi.common.core.utils.reflect.ReflectUtils;
 
 /**
@@ -95,6 +101,11 @@ public class ExcelUtil<T>
      * 注解列表
      */
     private List<Object[]> fields;
+
+    /**
+     * 最大高度
+     */
+    private short maxHeight;
 
     /**
      * 统计列表
@@ -169,7 +180,8 @@ public class ExcelUtil<T>
             throw new IOException("文件sheet不存在");
         }
 
-        int rows = sheet.getPhysicalNumberOfRows();
+        // 获取最后一个非空行的行下标，比如总行数为n，则返回的为n-1
+        int rows = sheet.getLastRowNum();
 
         if (rows > 0)
         {
@@ -209,10 +221,15 @@ public class ExcelUtil<T>
                     }
                 }
             }
-            for (int i = 1; i < rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
                 // 从第2行开始取数据,默认第一行是表头.
                 Row row = sheet.getRow(i);
+                // 判断当前行是否是空行
+                if (isRowEmpty(row))
+                {
+                    continue;
+                }
                 T entity = null;
                 for (Map.Entry<Integer, Field> entry : fieldsMap.entrySet())
                 {
@@ -233,7 +250,15 @@ public class ExcelUtil<T>
                         }
                         else
                         {
-                            val = Convert.toStr(val);
+                            String dateFormat = field.getAnnotation(Excel.class).dateFormat();
+                            if (StringUtils.isNotEmpty(dateFormat))
+                            {
+                                val = DateUtils.parseDateToStr(dateFormat, (Date) val);
+                            }
+                            else
+                            {
+                                val = Convert.toStr(val);
+                            }
                         }
                     }
                     else if ((Integer.TYPE == fieldType || Integer.class == fieldType) && StringUtils.isNumeric(Convert.toStr(val)))
@@ -303,7 +328,7 @@ public class ExcelUtil<T>
      */
     public void exportExcel(HttpServletResponse response, List<T> list, String sheetName) throws IOException
     {
-        response.setContentType("application/vnd.ms-excel");
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");
         this.init(list, sheetName, Type.EXPORT);
         exportExcel(response.getOutputStream());
@@ -317,7 +342,7 @@ public class ExcelUtil<T>
      */
     public void importTemplateExcel(HttpServletResponse response, String sheetName) throws IOException
     {
-        response.setContentType("application/vnd.ms-excel");
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");
         this.init(null, sheetName, Type.IMPORT);
         exportExcel(response.getOutputStream());
@@ -328,32 +353,12 @@ public class ExcelUtil<T>
      * 
      * @return 结果
      */
-    public void exportExcel(OutputStream outputStream)
+    public void exportExcel(OutputStream out)
     {
         try
         {
-            // 取出一共有多少个sheet.
-            double sheetNo = Math.ceil(list.size() / sheetSize);
-            for (int index = 0; index <= sheetNo; index++)
-            {
-                createSheet(sheetNo, index);
-
-                // 产生一行
-                Row row = sheet.createRow(0);
-                int column = 0;
-                // 写入各个字段的列头名称
-                for (Object[] os : fields)
-                {
-                    Excel excel = (Excel) os[1];
-                    this.createCell(excel, row, column++);
-                }
-                if (Type.EXPORT.equals(type))
-                {
-                    fillExcelData(index, row);
-                    addStatisticsRow();
-                }
-            }
-            wb.write(outputStream);
+            writeSheet();
+            wb.write(out);
         }
         catch (Exception e)
         {
@@ -361,27 +366,35 @@ public class ExcelUtil<T>
         }
         finally
         {
-            if (wb != null)
+            IOUtils.closeQuietly(wb);
+            IOUtils.closeQuietly(out);
+        }
+    }
+
+    /**
+     * 创建写入数据到Sheet
+     */
+    public void writeSheet()
+    {
+        // 取出一共有多少个sheet.
+        double sheetNo = Math.ceil(list.size() / sheetSize);
+        for (int index = 0; index <= sheetNo; index++)
+        {
+            createSheet(sheetNo, index);
+
+            // 产生一行
+            Row row = sheet.createRow(0);
+            int column = 0;
+            // 写入各个字段的列头名称
+            for (Object[] os : fields)
             {
-                try
-                {
-                    wb.close();
-                }
-                catch (IOException e1)
-                {
-                    e1.printStackTrace();
-                }
+                Excel excel = (Excel) os[1];
+                this.createCell(excel, row, column++);
             }
-            if (outputStream != null)
+            if (Type.EXPORT.equals(type))
             {
-                try
-                {
-                    outputStream.close();
-                }
-                catch (IOException e1)
-                {
-                    e1.printStackTrace();
-                }
+                fillExcelData(index, row);
+                addStatisticsRow();
             }
         }
     }
@@ -510,8 +523,51 @@ public class ExcelUtil<T>
         }
         else if (ColumnType.NUMERIC == attr.cellType())
         {
-            cell.setCellValue(StringUtils.contains(Convert.toStr(value), ".") ? Convert.toDouble(value) : Convert.toInt(value));
+            if (StringUtils.isNotNull(value))
+            {
+                cell.setCellValue(StringUtils.contains(Convert.toStr(value), ".") ? Convert.toDouble(value) : Convert.toInt(value));
+            }
         }
+        else if (ColumnType.IMAGE == attr.cellType())
+        {
+            ClientAnchor anchor = new XSSFClientAnchor(0, 0, 0, 0, (short) cell.getColumnIndex(), cell.getRow().getRowNum(), (short) (cell.getColumnIndex() + 1), cell.getRow().getRowNum() + 1);
+            String imagePath = Convert.toStr(value);
+            if (StringUtils.isNotEmpty(imagePath))
+            {
+                byte[] data = ImageUtils.getImage(imagePath);
+                getDrawingPatriarch(cell.getSheet()).createPicture(anchor,
+                        cell.getSheet().getWorkbook().addPicture(data, getImageType(data)));
+            }
+        }
+    }
+
+    /**
+     * 获取画布
+     */
+    public static Drawing<?> getDrawingPatriarch(Sheet sheet)
+    {
+        if (sheet.getDrawingPatriarch() == null)
+        {
+            sheet.createDrawingPatriarch();
+        }
+        return sheet.getDrawingPatriarch();
+    }
+
+    /**
+     * 获取图片类型,设置图片插入类型
+     */
+    public int getImageType(byte[] value)
+    {
+        String type = FileTypeUtils.getFileExtendName(value);
+        if ("JPG".equalsIgnoreCase(type))
+        {
+            return Workbook.PICTURE_TYPE_JPEG;
+        }
+        else if ("PNG".equalsIgnoreCase(type))
+        {
+            return Workbook.PICTURE_TYPE_PNG;
+        }
+        return Workbook.PICTURE_TYPE_JPEG;
     }
 
     /**
@@ -527,7 +583,6 @@ public class ExcelUtil<T>
         {
             // 设置列宽
             sheet.setColumnWidth(column, (int) ((attr.width() + 0.72) * 256));
-            row.setHeight((short) (attr.height() * 20));
         }
         // 如果设置了提示信息则鼠标放上去提示.
         if (StringUtils.isNotEmpty(attr.prompt()))
@@ -552,7 +607,7 @@ public class ExcelUtil<T>
         try
         {
             // 设置行高
-            row.setHeight((short) (attr.height() * 20));
+            row.setHeight(maxHeight);
             // 根据Excel中设置情况决定是否导出,有些情况需要保持为空,希望用户填写这一列.
             if (attr.isExport())
             {
@@ -851,6 +906,21 @@ public class ExcelUtil<T>
             }
         }
         this.fields = this.fields.stream().sorted(Comparator.comparing(objects -> ((Excel) objects[1]).sort())).collect(Collectors.toList());
+        this.maxHeight = getRowHeight();
+    }
+    
+    /**
+     * 根据注解获取最大行高
+     */
+    public short getRowHeight()
+    {
+        double maxHeight = 0;
+        for (Object[] os : this.fields)
+        {
+            Excel excel = (Excel) os[1];
+            maxHeight = maxHeight > excel.height() ? maxHeight : excel.height();
+        }
+        return (short) (maxHeight * 20);
     }
 
     /**
@@ -921,7 +991,7 @@ public class ExcelUtil<T>
                     }
                     else
                     {
-                        if ((Double) val % 1 > 0)
+                        if ((Double) val % 1 != 0)
                         {
                             val = new BigDecimal(val.toString());
                         }
@@ -951,5 +1021,28 @@ public class ExcelUtil<T>
             return val;
         }
         return val;
+    }
+
+    /**
+     * 判断是否是空行
+     * 
+     * @param row 判断的行
+     * @return
+     */
+    private boolean isRowEmpty(Row row)
+    {
+        if (row == null)
+        {
+            return true;
+        }
+        for (int i = row.getFirstCellNum(); i < row.getLastCellNum(); i++)
+        {
+            Cell cell = row.getCell(i);
+            if (cell != null && cell.getCellType() != CellType.BLANK)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

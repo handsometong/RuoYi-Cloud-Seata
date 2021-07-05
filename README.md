@@ -5,7 +5,7 @@
 * 采用前后端分离的模式，微服务版本前端(基于 [RuoYi-Vue](https://gitee.com/y_project/RuoYi-Vue))。
 * 后端采用Spring Boot、Spring Cloud & Alibaba。
 * 注册中心、配置中心选型Nacos，权限认证使用Redis。
-* 流量控制框架选型Sentinel。
+* 流量控制框架选型Sentinel，分布式事务选型Seata。
 * 如需不分离应用，请移步 [RuoYi](https://gitee.com/y_project/RuoYi)，如需分离应用，请移步 [RuoYi-Vue](https://gitee.com/y_project/RuoYi-Vue)
 * 阿里云折扣场：[点我进入](http://aly.ruoyi.vip)，腾讯云秒杀场：[点我进入](http://txy.ruoyi.vip)&nbsp;&nbsp;
 * 阿里云优惠券：[点我领取](https://www.aliyun.com/minisite/goods?userCode=brki8iof&share_source=copy_link)，腾讯云优惠券：[点我领取](https://cloud.tencent.com/redirect.php?redirect=1025&cps_key=198c8df2ed259157187173bc7f4f32fd&from=console)&nbsp;&nbsp;
@@ -24,6 +24,7 @@ com.ruoyi
 ├── ruoyi-common          // 通用模块
 │       └── ruoyi-common-core                         // 核心模块
 │       └── ruoyi-common-datascope                    // 权限范围
+│       └── ruoyi-common-datasource                   // 多数据源
 │       └── ruoyi-common-log                          // 日志记录
 │       └── ruoyi-common-redis                        // 缓存服务
 │       └── ruoyi-common-security                     // 安全模块
@@ -40,7 +41,7 @@ com.ruoyi
 
 ## 架构图
 
-<img src="https://oscimg.oschina.net/oscnet/up-8b9f92ed62f8aa17bd95999272f12a5927c.png"/>
+<img src="https://oscimg.oschina.net/oscnet/up-82e9722ecb846786405a904bafcf19f73f3.png"/>
 
 ## 内置功能
 
@@ -107,11 +108,11 @@ com.ruoyi
     </tr>
     <tr>
         <td><img src="https://oscimg.oschina.net/oscnet/up-ff9e3066561574aca73005c5730c6a41f15.png"/></td>
-        <td><img src="https://oscimg.oschina.net/oscnet/up-6d73c2140ce694e3de4c05035fdc1868d4c.png"/></td>
+        <td><img src="https://oscimg.oschina.net/oscnet/up-5e4daac0bb59612c5038448acbcef235e3a.png"/></td>
     </tr>
 </table>
 
 
 ## 若依微服务交流群
 
-QQ群： [![加入QQ群](https://img.shields.io/badge/已满-42799195-blue.svg)](https://jq.qq.com/?_wv=1027&k=yqInfq0S) [![加入QQ群](https://img.shields.io/badge/已满-170157040-blue.svg)](https://jq.qq.com/?_wv=1027&k=Oy1mb3p8) [![加入QQ群](https://img.shields.io/badge/130643120-blue.svg)](https://jq.qq.com/?_wv=1027&k=rvxkJtXK) 点击按钮入群。
+QQ群： [![加入QQ群](https://img.shields.io/badge/已满-42799195-blue.svg)](https://jq.qq.com/?_wv=1027&k=yqInfq0S) [![加入QQ群](https://img.shields.io/badge/已满-170157040-blue.svg)](https://jq.qq.com/?_wv=1027&k=Oy1mb3p8) [![加入QQ群](https://img.shields.io/badge/已满-130643120-blue.svg)](https://jq.qq.com/?_wv=1027&k=rvxkJtXK) [![加入QQ群](https://img.shields.io/badge/225920371-blue.svg)](https://jq.qq.com/?_wv=1027&k=0Ck3PvTe) 点击按钮入群。

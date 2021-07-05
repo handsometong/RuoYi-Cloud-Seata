@@ -18,9 +18,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 import com.alibaba.fastjson.JSON;
-import com.ruoyi.common.core.constant.CacheConstants;
+import com.ruoyi.common.core.utils.SecurityUtils;
 import com.ruoyi.common.core.utils.ServletUtils;
 import com.ruoyi.common.core.utils.StringUtils;
 import com.ruoyi.common.core.utils.ip.IpUtils;
@@ -93,8 +94,7 @@ public class LogAspect
             operLog.setJsonResult(JSON.toJSONString(jsonResult));
 
             operLog.setOperUrl(ServletUtils.getRequest().getRequestURI());
-            HttpServletRequest request = ServletUtils.getRequest();
-            String username = request.getHeader(CacheConstants.DETAILS_USERNAME);
+            String username = SecurityUtils.getUsername();
             if (StringUtils.isNotBlank(username))
             {
                 operLog.setOperName(username);
@@ -190,7 +190,7 @@ public class LogAspect
         {
             for (int i = 0; i < paramsArray.length; i++)
             {
-                if (!isFilterObject(paramsArray[i]))
+                if (StringUtils.isNotNull(paramsArray[i]) && !isFilterObject(paramsArray[i]))
                 {
                     try
                     {
@@ -237,6 +237,7 @@ public class LogAspect
                 return entry.getValue() instanceof MultipartFile;
             }
         }
-        return o instanceof MultipartFile || o instanceof HttpServletRequest || o instanceof HttpServletResponse;
+        return o instanceof MultipartFile || o instanceof HttpServletRequest || o instanceof HttpServletResponse
+                || o instanceof BindingResult;
     }
 }

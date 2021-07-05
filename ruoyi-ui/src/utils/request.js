@@ -27,7 +27,7 @@ service.interceptors.request.use(config => {
     for (const propName of Object.keys(config.params)) {
       const value = config.params[propName];
       var part = encodeURIComponent(propName) + "=";
-      if (value && typeof(value) !== "undefined") {
+      if (value !== null && typeof(value) !== "undefined") {
         if (typeof value === 'object') {
           for (const key of Object.keys(value)) {
             let params = propName + '[' + key + ']';
@@ -65,7 +65,7 @@ service.interceptors.response.use(res => {
         store.dispatch('LogOut').then(() => {
           location.href = '/index';
         })
-      })
+      }).catch(() => {});
     } else if (code === 500) {
       Message({
         message: msg,

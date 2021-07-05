@@ -3,7 +3,6 @@ package com.ruoyi.file.utils;
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 import com.ruoyi.common.core.exception.file.FileNameLengthLimitExceededException;
 import com.ruoyi.common.core.exception.file.FileSizeLimitExceededException;
@@ -31,12 +30,6 @@ public class FileUploadUtils
     public static final int DEFAULT_FILE_NAME_LENGTH = 100;
 
     /**
-     * 资源映射路径 前缀
-     */
-    @Value("${file.prefix}")
-    public String localFilePrefix;
-
-    /**
      * 根据文件路径上传
      *
      * @param baseDir 相对应用的基目录
@@ -61,7 +54,7 @@ public class FileUploadUtils
      *
      * @param baseDir 相对应用的基目录
      * @param file 上传的文件
-     * @param extension 上传文件类型
+     * @param allowedExtension 上传文件类型
      * @return 返回上传成功的文件名
      * @throws FileSizeLimitExceededException 如果超出最大大小
      * @throws FileNameLengthLimitExceededException 文件名太长
@@ -110,7 +103,7 @@ public class FileUploadUtils
                 desc.getParentFile().mkdirs();
             }
         }
-        return desc;
+        return desc.isAbsolute() ? desc : desc.getAbsoluteFile();
     }
 
     private static final String getPathFileName(String fileName) throws IOException
@@ -123,9 +116,8 @@ public class FileUploadUtils
      * 文件大小校验
      *
      * @param file 上传的文件
-     * @return
      * @throws FileSizeLimitExceededException 如果超出最大大小
-     * @throws InvalidExtensionException
+     * @throws InvalidExtensionException 文件校验异常
      */
     public static final void assertAllowed(MultipartFile file, String[] allowedExtension)
             throws FileSizeLimitExceededException, InvalidExtensionException
@@ -170,9 +162,9 @@ public class FileUploadUtils
     /**
      * 判断MIME类型是否是允许的MIME类型
      *
-     * @param extension
-     * @param allowedExtension
-     * @return
+     * @param extension 上传文件类型
+     * @param allowedExtension 允许上传文件类型
+     * @return true/false
      */
     public static final boolean isAllowedExtension(String extension, String[] allowedExtension)
     {

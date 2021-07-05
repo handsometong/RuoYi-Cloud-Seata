@@ -20,6 +20,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.ruoyi.common.core.constant.CacheConstants;
 import com.ruoyi.common.core.constant.Constants;
 import com.ruoyi.common.core.domain.R;
+import com.ruoyi.common.core.utils.ServletUtils;
 import com.ruoyi.common.core.utils.StringUtils;
 import com.ruoyi.common.redis.service.RedisService;
 import com.ruoyi.gateway.config.properties.IgnoreWhiteProperties;
@@ -78,7 +79,7 @@ public class AuthFilter implements GlobalFilter, Ordered
         redisService.expire(getTokenKey(token), EXPIRE_TIME);
         // 设置用户信息到请求
         ServerHttpRequest mutableReq = exchange.getRequest().mutate().header(CacheConstants.DETAILS_USER_ID, userid)
-                .header(CacheConstants.DETAILS_USERNAME, username).build();
+                .header(CacheConstants.DETAILS_USERNAME, ServletUtils.urlEncode(username)).build();
         ServerWebExchange mutableExchange = exchange.mutate().request(mutableReq).build();
 
         return chain.filter(mutableExchange);

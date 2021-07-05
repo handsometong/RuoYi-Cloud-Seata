@@ -67,6 +67,18 @@ public class PageDomain
 
     public void setIsAsc(String isAsc)
     {
-        this.isAsc = isAsc;
+        if (StringUtils.isNotEmpty(isAsc))
+        {
+            // 兼容前端排序类型
+            if ("ascending".equals(isAsc))
+            {
+                isAsc = "asc";
+            }
+            else if ("descending".equals(isAsc))
+            {
+                isAsc = "desc";
+            }
+            this.isAsc = isAsc;
+        }
     }
 }

@@ -19,11 +19,12 @@ import { getDicts } from "@/api/system/dict/data";
 import { getConfigKey } from "@/api/system/config";
 import { parseTime, resetForm, addDateRange, selectDictLabel, selectDictLabels, handleTree } from "@/utils/ruoyi";
 import Pagination from "@/components/Pagination";
-// 自定义表格工具扩展
+// 自定义表格工具组件
 import RightToolbar from "@/components/RightToolbar"
-// 代码高亮插件
-import hljs from 'highlight.js'
-import 'highlight.js/styles/github-gist.css'
+// 字典标签组件
+import DictTag from '@/components/DictTag'
+// 头部标签组件
+import VueMeta from 'vue-meta'
 
 // 全局方法挂载
 Vue.prototype.getDicts = getDicts
@@ -49,11 +50,12 @@ Vue.prototype.msgInfo = function (msg) {
 }
 
 // 全局组件挂载
+Vue.component('DictTag', DictTag)
 Vue.component('Pagination', Pagination)
 Vue.component('RightToolbar', RightToolbar)
 
 Vue.use(permission)
-Vue.use(hljs.vuePlugin);
+Vue.use(VueMeta)
 
 /**
  * If you don't want to use mock-server

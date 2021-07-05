@@ -17,7 +17,8 @@ public class SecurityUtils
      */
     public static String getUsername()
     {
-        return ServletUtils.getRequest().getHeader(CacheConstants.DETAILS_USERNAME);
+        String username = ServletUtils.getRequest().getHeader(CacheConstants.DETAILS_USERNAME);
+        return ServletUtils.urlDecode(username);
     }
 
     /**
