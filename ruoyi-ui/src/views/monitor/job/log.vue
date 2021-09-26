@@ -20,10 +20,10 @@
           style="width: 240px"
         >
           <el-option
-            v-for="dict in jobGroupOptions"
-            :key="dict.dictValue"
-            :label="dict.dictLabel"
-            :value="dict.dictValue"
+            v-for="dict in dict.type.sys_job_group"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
           />
         </el-select>
       </el-form-item>
@@ -36,10 +36,10 @@
           style="width: 240px"
         >
           <el-option
-            v-for="dict in statusOptions"
-            :key="dict.dictValue"
-            :label="dict.dictLabel"
-            :value="dict.dictValue"
+            v-for="dict in dict.type.sys_common_status"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
           />
         </el-select>
       </el-form-item>
@@ -109,10 +109,18 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="日志编号" width="80" align="center" prop="jobLogId" />
       <el-table-column label="任务名称" align="center" prop="jobName" :show-overflow-tooltip="true" />
-      <el-table-column label="任务组名" align="center" prop="jobGroup" :formatter="jobGroupFormat" :show-overflow-tooltip="true" />
+      <el-table-column label="任务组名" align="center" prop="jobGroup" :show-overflow-tooltip="true">
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.sys_job_group" :value="scope.row.jobGroup"/>
+        </template>
+      </el-table-column>
       <el-table-column label="调用目标字符串" align="center" prop="invokeTarget" :show-overflow-tooltip="true" />
       <el-table-column label="日志信息" align="center" prop="jobMessage" :show-overflow-tooltip="true" />
-      <el-table-column label="执行状态" align="center" prop="status" :formatter="statusFormat" />
+      <el-table-column label="执行状态" align="center" prop="status">
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.sys_common_status" :value="scope.row.status"/>
+        </template>
+      </el-table-column>
       <el-table-column label="执行时间" align="center" prop="createTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createTime) }}</span>
@@ -181,6 +189,7 @@ import { listJobLog, delJobLog, cleanJobLog } from "@/api/monitor/jobLog";
 
 export default {
   name: "JobLog",
+  dicts: ['sys_common_status', 'sys_job_group'],
   data() {
     return {
       // 遮罩层
@@ -201,10 +210,6 @@ export default {
       dateRange: [],
       // 表单参数
       form: {},
-      // 执行状态字典
-      statusOptions: [],
-      // 任务组名字典
-      jobGroupOptions: [],
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -226,12 +231,6 @@ export default {
     } else {
       this.getList();
     }
-    this.getDicts("sys_common_status").then(response => {
-      this.statusOptions = response.data;
-    });
-    this.getDicts("sys_job_group").then(response => {
-      this.jobGroupOptions = response.data;
-    });
   },
   methods: {
     /** 查询调度日志列表 */
@@ -243,14 +242,6 @@ export default {
           this.loading = false;
         }
       );
-    },
-    // 执行状态字典翻译
-    statusFormat(row, column) {
-      return this.selectDictLabel(this.statusOptions, row.status);
-    },
-    // 任务组名字典翻译
-    jobGroupFormat(row, column) {
-      return this.selectDictLabel(this.jobGroupOptions, row.jobGroup);
     },
     // 返回按钮
     handleClose() {
@@ -281,29 +272,21 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const jobLogIds = this.ids;
-      this.$confirm('是否确认删除调度日志编号为"' + jobLogIds + '"的数据项?', "警告", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning"
-        }).then(function() {
-          return delJobLog(jobLogIds);
-        }).then(() => {
-          this.getList();
-          this.msgSuccess("删除成功");
-        })
+      this.$modal.confirm('是否确认删除调度日志编号为"' + jobLogIds + '"的数据项？').then(function() {
+        return delJobLog(jobLogIds);
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
     },
     /** 清空按钮操作 */
     handleClean() {
-      this.$confirm("是否确认清空所有调度日志数据项?", "警告", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning"
-        }).then(function() {
-          return cleanJobLog();
-        }).then(() => {
-          this.getList();
-          this.msgSuccess("清空成功");
-        })
+      this.$modal.confirm('是否确认清空所有调度日志数据项？').then(function() {
+        return cleanJobLog();
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("清空成功");
+      }).catch(() => {});
     },
     /** 导出按钮操作 */
     handleExport() {

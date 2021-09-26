@@ -30,10 +30,10 @@
           style="width: 240px"
         >
           <el-option
-            v-for="dict in typeOptions"
-            :key="dict.dictValue"
-            :label="dict.dictLabel"
-            :value="dict.dictValue"
+            v-for="dict in dict.type.sys_oper_type"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
           />
         </el-select>
       </el-form-item>
@@ -46,10 +46,10 @@
           style="width: 240px"
         >
           <el-option
-            v-for="dict in statusOptions"
-            :key="dict.dictValue"
-            :label="dict.dictLabel"
-            :value="dict.dictValue"
+            v-for="dict in dict.type.sys_common_status"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
           />
         </el-select>
       </el-form-item>
@@ -110,11 +110,19 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="日志编号" align="center" prop="operId" />
       <el-table-column label="系统模块" align="center" prop="title" />
-      <el-table-column label="操作类型" align="center" prop="businessType" :formatter="typeFormat" />
+      <el-table-column label="操作类型" align="center" prop="businessType">
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.sys_oper_type" :value="scope.row.businessType"/>
+        </template>
+      </el-table-column>
       <el-table-column label="请求方式" align="center" prop="requestMethod" />
       <el-table-column label="操作人员" align="center" prop="operName" :show-overflow-tooltip="true" sortable="custom" :sort-orders="['descending', 'ascending']" width="100"/>
       <el-table-column label="主机" align="center" prop="operIp" width="130" :show-overflow-tooltip="true" />
-      <el-table-column label="操作状态" align="center" prop="status" :formatter="statusFormat" />
+      <el-table-column label="操作状态" align="center" prop="status">
+        <template slot-scope="scope">
+          <dict-tag :options="dict.type.sys_common_status" :value="scope.row.status"/>
+        </template>
+      </el-table-column>
       <el-table-column label="操作日期" align="center" prop="operTime" sortable="custom" :sort-orders="['descending', 'ascending']" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.operTime) }}</span>
@@ -190,6 +198,7 @@ import { list, delOperlog, cleanOperlog } from "@/api/system/operlog";
 
 export default {
   name: "Operlog",
+  dicts: ['sys_oper_type', 'sys_common_status'],
   data() {
     return {
       // 遮罩层
@@ -206,10 +215,6 @@ export default {
       list: [],
       // 是否显示弹出层
       open: false,
-      // 类型数据字典
-      typeOptions: [],
-      // 类型数据字典
-      statusOptions: [],
       // 日期范围
       dateRange: [],
       // 默认排序
@@ -229,12 +234,6 @@ export default {
   },
   created() {
     this.getList();
-    this.getDicts("sys_oper_type").then(response => {
-      this.typeOptions = response.data;
-    });
-    this.getDicts("sys_common_status").then(response => {
-      this.statusOptions = response.data;
-    });
   },
   methods: {
     /** 查询登录日志 */
@@ -247,13 +246,9 @@ export default {
         }
       );
     },
-    // 操作日志状态字典翻译
-    statusFormat(row, column) {
-      return this.selectDictLabel(this.statusOptions, row.status);
-    },
     // 操作日志类型字典翻译
     typeFormat(row, column) {
-      return this.selectDictLabel(this.typeOptions, row.businessType);
+      return this.selectDictLabel(this.dict.type.sys_oper_type, row.businessType);
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -286,29 +281,21 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const operIds = row.operId || this.ids;
-      this.$confirm('是否确认删除日志编号为"' + operIds + '"的数据项?', "警告", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning"
-        }).then(function() {
-          return delOperlog(operIds);
-        }).then(() => {
-          this.getList();
-          this.msgSuccess("删除成功");
-        }).catch(() => {});
+      this.$modal.confirm('是否确认删除日志编号为"' + operIds + '"的数据项？').then(function() {
+        return delOperlog(operIds);
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
     },
     /** 清空按钮操作 */
     handleClean() {
-        this.$confirm('是否确认清空所有操作日志数据项?', "警告", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning"
-        }).then(function() {
-          return cleanOperlog();
-        }).then(() => {
-          this.getList();
-          this.msgSuccess("清空成功");
-        }).catch(() => {});
+      this.$modal.confirm('是否确认清空所有操作日志数据项？').then(function() {
+        return cleanOperlog();
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("清空成功");
+      }).catch(() => {});
     },
     /** 导出按钮操作 */
     handleExport() {

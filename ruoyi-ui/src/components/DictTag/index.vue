@@ -1,22 +1,23 @@
 <template>
   <div>
     <template v-for="(item, index) in options">
-      <template v-if="values.includes(item.dictValue)">
+      <template v-if="values.includes(item.value)">
         <span
-          v-if="item.listClass == 'default' || item.listClass == ''"
-          :key="item.dictValue"
+          v-if="item.raw.listClass == 'default' || item.raw.listClass == ''"
+          :key="item.value"
           :index="index"
-          :class="item.cssClass"
-          >{{ item.dictLabel }}</span
+          :class="item.raw.cssClass"
+          >{{ item.label }}</span
         >
         <el-tag
           v-else
-          :key="item.dictValue"
+          :disable-transitions="true"
+          :key="item.value"
           :index="index"
-          :type="item.listClass == 'primary' ? '' : item.listClass"
-          :class="item.cssClass"
+          :type="item.raw.listClass == 'primary' ? '' : item.raw.listClass"
+          :class="item.raw.cssClass"
         >
-          {{ item.dictLabel }}
+          {{ item.label }}
         </el-tag>
       </template>
     </template>
@@ -31,12 +32,12 @@ export default {
       type: Array,
       default: null,
     },
-    value: [String, Array],
+    value: [Number, String, Array],
   },
   computed: {
     values() {
-      if (this.value) {
-        return Array.isArray(this.value) ? this.value : [this.value];
+      if (this.value !== null && typeof this.value !== 'undefined') {
+        return Array.isArray(this.value) ? this.value : [String(this.value)];
       } else {
         return [];
       }
