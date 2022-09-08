@@ -3,7 +3,12 @@
     <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form">
       <h3 class="title">若依后台管理系统</h3>
       <el-form-item prop="username">
-        <el-input v-model="loginForm.username" type="text" auto-complete="off" placeholder="账号">
+        <el-input
+          v-model="loginForm.username"
+          type="text"
+          auto-complete="off"
+          placeholder="账号"
+        >
           <svg-icon slot="prefix" icon-class="user" class="el-input__icon input-icon" />
         </el-input>
       </el-form-item>
@@ -18,7 +23,7 @@
           <svg-icon slot="prefix" icon-class="password" class="el-input__icon input-icon" />
         </el-input>
       </el-form-item>
-      <el-form-item prop="code" v-if="captchaOnOff">
+      <el-form-item prop="code" v-if="captchaEnabled">
         <el-input
           v-model="loginForm.code"
           auto-complete="off"
@@ -51,7 +56,7 @@
     </el-form>
     <!--  底部  -->
     <div class="el-login-footer">
-      <span>Copyright © 2018-2021 ruoyi.vip All Rights Reserved.</span>
+      <span>Copyright © 2018-2022 ruoyi.vip All Rights Reserved.</span>
     </div>
   </div>
 </template>
@@ -66,7 +71,6 @@ export default {
   data() {
     return {
       codeUrl: "",
-      cookiePassword: "",
       loginForm: {
         username: "admin",
         password: "admin123",
@@ -85,7 +89,7 @@ export default {
       },
       loading: false,
       // 验证码开关
-      captchaOnOff: true,
+      captchaEnabled: true,
       // 注册开关
       register: false,
       redirect: undefined
@@ -106,8 +110,8 @@ export default {
   methods: {
     getCode() {
       getCodeImg().then(res => {
-        this.captchaOnOff = res.captchaOnOff === undefined ? true : res.captchaOnOff;
-        if (this.captchaOnOff) {
+        this.captchaEnabled = res.captchaEnabled === undefined ? true : res.captchaEnabled;
+        if (this.captchaEnabled) {
           this.codeUrl = "data:image/gif;base64," + res.img;
           this.loginForm.uuid = res.uuid;
         }
@@ -140,7 +144,7 @@ export default {
             this.$router.push({ path: this.redirect || "/" }).catch(()=>{});
           }).catch(() => {
             this.loading = false;
-            if (this.captchaOnOff) {
+            if (this.captchaEnabled) {
               this.getCode();
             }
           });

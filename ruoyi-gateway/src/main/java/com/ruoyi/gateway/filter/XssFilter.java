@@ -7,7 +7,9 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -42,7 +44,7 @@ public class XssFilter implements GlobalFilter, Ordered
         ServerHttpRequest request = exchange.getRequest();
         // GET DELETE 不过滤
         HttpMethod method = request.getMethod();
-        if (method == null || method.matches("GET") || method.matches("DELETE"))
+        if (method == null || method == HttpMethod.GET || method == HttpMethod.DELETE)
         {
             return chain.filter(exchange);
         }
@@ -70,10 +72,12 @@ public class XssFilter implements GlobalFilter, Ordered
             public Flux<DataBuffer> getBody()
             {
                 Flux<DataBuffer> body = super.getBody();
-                return body.map(dataBuffer -> {
-                    byte[] content = new byte[dataBuffer.readableByteCount()];
-                    dataBuffer.read(content);
-                    DataBufferUtils.release(dataBuffer);
+                return body.buffer().map(dataBuffers -> {
+                    DataBufferFactory dataBufferFactory = new DefaultDataBufferFactory();
+                    DataBuffer join = dataBufferFactory.join(dataBuffers);
+                    byte[] content = new byte[join.readableByteCount()];
+                    join.read(content);
+                    DataBufferUtils.release(join);
                     String bodyStr = new String(content, StandardCharsets.UTF_8);
                     // 防xss攻击过滤
                     bodyStr = EscapeUtil.clean(bodyStr);
@@ -104,7 +108,7 @@ public class XssFilter implements GlobalFilter, Ordered
     /**
      * 是否是Json请求
      * 
-     * @param request
+     * @param exchange HTTP请求
      */
     public boolean isJsonRequest(ServerWebExchange exchange)
     {

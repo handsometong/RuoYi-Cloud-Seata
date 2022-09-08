@@ -1,13 +1,12 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="系统模块" prop="title">
         <el-input
           v-model="queryParams.title"
           placeholder="请输入系统模块"
           clearable
           style="width: 240px;"
-          size="small"
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
@@ -17,7 +16,6 @@
           placeholder="请输入操作人员"
           clearable
           style="width: 240px;"
-          size="small"
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
@@ -26,7 +24,6 @@
           v-model="queryParams.businessType"
           placeholder="操作类型"
           clearable
-          size="small"
           style="width: 240px"
         >
           <el-option
@@ -42,7 +39,6 @@
           v-model="queryParams.status"
           placeholder="操作状态"
           clearable
-          size="small"
           style="width: 240px"
         >
           <el-option
@@ -56,7 +52,6 @@
       <el-form-item label="操作时间">
         <el-date-picker
           v-model="dateRange"
-          size="small"
           style="width: 240px"
           value-format="yyyy-MM-dd"
           type="daterange"

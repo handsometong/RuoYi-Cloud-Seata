@@ -10,7 +10,7 @@ import '@/assets/styles/ruoyi.scss' // ruoyi css
 import App from './App'
 import store from './store'
 import router from './router'
-import directive from './directive' //directive
+import directive from './directive' // directive
 import plugins from './plugins' // plugins
 import { download } from '@/utils/request'
 
@@ -29,6 +29,8 @@ import Editor from "@/components/Editor"
 import FileUpload from "@/components/FileUpload"
 // 图片上传组件
 import ImageUpload from "@/components/ImageUpload"
+// 图片预览组件
+import ImagePreview from "@/components/ImagePreview"
 // 字典标签组件
 import DictTag from '@/components/DictTag'
 // 头部标签组件
@@ -54,6 +56,7 @@ Vue.component('RightToolbar', RightToolbar)
 Vue.component('Editor', Editor)
 Vue.component('FileUpload', FileUpload)
 Vue.component('ImageUpload', ImageUpload)
+Vue.component('ImagePreview', ImagePreview)
 
 Vue.use(directive)
 Vue.use(plugins)

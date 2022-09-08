@@ -1,14 +1,17 @@
 package com.ruoyi.common.datascope.aspect;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import com.ruoyi.common.core.context.SecurityContextHolder;
+import com.ruoyi.common.core.text.Convert;
 import com.ruoyi.common.core.utils.StringUtils;
 import com.ruoyi.common.core.web.domain.BaseEntity;
 import com.ruoyi.common.datascope.annotation.DataScope;
-import com.ruoyi.common.security.service.TokenService;
+import com.ruoyi.common.security.utils.SecurityUtils;
 import com.ruoyi.system.api.domain.SysRole;
 import com.ruoyi.system.api.domain.SysUser;
 import com.ruoyi.system.api.model.LoginUser;
@@ -52,9 +55,6 @@ public class DataScopeAspect
      */
     public static final String DATA_SCOPE = "dataScope";
 
-    @Autowired
-    private TokenService tokenService;
-
     @Before("@annotation(controllerDataScope)")
     public void doBefore(JoinPoint point, DataScope controllerDataScope) throws Throwable
     {
@@ -65,15 +65,16 @@ public class DataScopeAspect
     protected void handleDataScope(final JoinPoint joinPoint, DataScope controllerDataScope)
     {
         // 获取当前的用户
-        LoginUser loginUser = tokenService.getLoginUser();
+        LoginUser loginUser = SecurityUtils.getLoginUser();
         if (StringUtils.isNotNull(loginUser))
         {
             SysUser currentUser = loginUser.getSysUser();
             // 如果是超级管理员，则不过滤数据
             if (StringUtils.isNotNull(currentUser) && !currentUser.isAdmin())
             {
+                String permission = StringUtils.defaultIfEmpty(controllerDataScope.permission(), SecurityContextHolder.getPermission());
                 dataScopeFilter(joinPoint, currentUser, controllerDataScope.deptAlias(),
-                        controllerDataScope.userAlias());
+                        controllerDataScope.userAlias(), permission);
             }
         }
     }
@@ -85,14 +86,25 @@ public class DataScopeAspect
      * @param user 用户
      * @param deptAlias 部门别名
      * @param userAlias 用户别名
+     * @param permission 权限字符
      */
-    public static void dataScopeFilter(JoinPoint joinPoint, SysUser user, String deptAlias, String userAlias)
+    public static void dataScopeFilter(JoinPoint joinPoint, SysUser user, String deptAlias, String userAlias, String permission)
     {
         StringBuilder sqlString = new StringBuilder();
+        List<String> conditions = new ArrayList<String>();
 
         for (SysRole role : user.getRoles())
         {
             String dataScope = role.getDataScope();
+            if (!DATA_SCOPE_CUSTOM.equals(dataScope) && conditions.contains(dataScope))
+            {
+                continue;
+            }
+            if (StringUtils.isNotEmpty(permission) && StringUtils.isNotEmpty(role.getPermissions())
+                    && !StringUtils.containsAny(role.getPermissions(), Convert.toStrArray(permission)))
+            {
+                continue;
+            }
             if (DATA_SCOPE_ALL.equals(dataScope))
             {
                 sqlString = new StringBuilder();
@@ -123,9 +135,10 @@ public class DataScopeAspect
                 else
                 {
                     // 数据权限为仅本人且没有userAlias别名不查询任何数据
-                    sqlString.append(" OR 1=0 ");
+                    sqlString.append(StringUtils.format(" OR {}.dept_id = 0 ", deptAlias));
                 }
             }
+            conditions.add(dataScope);
         }
 
         if (StringUtils.isNotBlank(sqlString.toString()))

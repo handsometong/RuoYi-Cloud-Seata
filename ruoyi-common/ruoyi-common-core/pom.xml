@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.ruoyi</groupId>
         <artifactId>ruoyi-common</artifactId>
-        <version>3.1.0</version>
+        <version>3.6.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -41,10 +41,10 @@
             <artifactId>spring-web</artifactId>
         </dependency>
 
-        <!-- Apache Commons Pool2 -->
+        <!-- Transmittable ThreadLocal -->
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-pool2</artifactId>
+            <groupId>com.alibaba</groupId>
+            <artifactId>transmittable-thread-local</artifactId>
         </dependency>
 
         <!-- Pagehelper -->
@@ -67,8 +67,20 @@
 
         <!-- Alibaba Fastjson -->
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+        </dependency>
+
+        <!-- Jwt -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+        </dependency>
+
+        <!-- Jaxb -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
         </dependency>
 
         <!-- Apache Lang3 -->

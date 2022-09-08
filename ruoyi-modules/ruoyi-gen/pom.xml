@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.ruoyi</groupId>
         <artifactId>ruoyi-modules</artifactId>
-        <version>3.1.0</version>
+        <version>3.6.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -51,7 +51,7 @@
         <!-- Apache Velocity -->
         <dependency>
             <groupId>org.apache.velocity</groupId>
-            <artifactId>velocity</artifactId>
+            <artifactId>velocity-engine-core</artifactId>
         </dependency>
         
         <!-- Commons Collections -->

@@ -2,15 +2,18 @@ package com.ruoyi.file.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Objects;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.web.multipart.MultipartFile;
 import com.ruoyi.common.core.exception.file.FileNameLengthLimitExceededException;
 import com.ruoyi.common.core.exception.file.FileSizeLimitExceededException;
 import com.ruoyi.common.core.exception.file.InvalidExtensionException;
 import com.ruoyi.common.core.utils.DateUtils;
-import com.ruoyi.common.core.utils.IdUtils;
 import com.ruoyi.common.core.utils.StringUtils;
+import com.ruoyi.common.core.utils.file.FileTypeUtils;
 import com.ruoyi.common.core.utils.file.MimeTypeUtils;
+import com.ruoyi.common.core.utils.uuid.Seq;
 
 /**
  * 文件上传工具类
@@ -65,7 +68,7 @@ public class FileUploadUtils
             throws FileSizeLimitExceededException, IOException, FileNameLengthLimitExceededException,
             InvalidExtensionException
     {
-        int fileNamelength = file.getOriginalFilename().length();
+        int fileNamelength = Objects.requireNonNull(file.getOriginalFilename()).length();
         if (fileNamelength > FileUploadUtils.DEFAULT_FILE_NAME_LENGTH)
         {
             throw new FileNameLengthLimitExceededException(FileUploadUtils.DEFAULT_FILE_NAME_LENGTH);
@@ -75,10 +78,9 @@ public class FileUploadUtils
 
         String fileName = extractFilename(file);
 
-        File desc = getAbsoluteFile(baseDir, fileName);
-        file.transferTo(desc);
-        String pathFileName = getPathFileName(fileName);
-        return pathFileName;
+        String absPath = getAbsoluteFile(baseDir, fileName).getAbsolutePath();
+        file.transferTo(Paths.get(absPath));
+        return getPathFileName(fileName);
     }
 
     /**
@@ -86,10 +88,8 @@ public class FileUploadUtils
      */
     public static final String extractFilename(MultipartFile file)
     {
-        String fileName = file.getOriginalFilename();
-        String extension = getExtension(file);
-        fileName = DateUtils.datePath() + "/" + IdUtils.fastUUID() + "." + extension;
-        return fileName;
+        return StringUtils.format("{}/{}_{}.{}", DateUtils.datePath(),
+                FilenameUtils.getBaseName(file.getOriginalFilename()), Seq.getId(Seq.uploadSeqType), FileTypeUtils.getExtension(file));
     }
 
     private static final File getAbsoluteFile(String uploadDir, String fileName) throws IOException
@@ -123,13 +123,13 @@ public class FileUploadUtils
             throws FileSizeLimitExceededException, InvalidExtensionException
     {
         long size = file.getSize();
-        if (DEFAULT_MAX_SIZE != -1 && size > DEFAULT_MAX_SIZE)
+        if (size > DEFAULT_MAX_SIZE)
         {
             throw new FileSizeLimitExceededException(DEFAULT_MAX_SIZE / 1024 / 1024);
         }
 
         String fileName = file.getOriginalFilename();
-        String extension = getExtension(file);
+        String extension = FileTypeUtils.getExtension(file);
         if (allowedExtension != null && !isAllowedExtension(extension, allowedExtension))
         {
             if (allowedExtension == MimeTypeUtils.IMAGE_EXTENSION)
@@ -176,21 +176,5 @@ public class FileUploadUtils
             }
         }
         return false;
-    }
-
-    /**
-     * 获取文件名的后缀
-     * 
-     * @param file 表单文件
-     * @return 后缀名
-     */
-    public static final String getExtension(MultipartFile file)
-    {
-        String extension = FilenameUtils.getExtension(file.getOriginalFilename());
-        if (StringUtils.isEmpty(extension))
-        {
-            extension = MimeTypeUtils.getExtension(file.getContentType());
-        }
-        return extension;
     }
 }

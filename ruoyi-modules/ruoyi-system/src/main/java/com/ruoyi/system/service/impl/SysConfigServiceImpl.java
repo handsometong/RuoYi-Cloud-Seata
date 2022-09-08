@@ -5,7 +5,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.ruoyi.common.core.constant.Constants;
+import com.ruoyi.common.core.constant.CacheConstants;
 import com.ruoyi.common.core.constant.UserConstants;
 import com.ruoyi.common.core.exception.ServiceException;
 import com.ruoyi.common.core.text.Convert;
@@ -127,7 +127,6 @@ public class SysConfigServiceImpl implements ISysConfigService
      * 批量删除参数信息
      * 
      * @param configIds 需要删除的参数ID
-     * @return 结果
      */
     @Override
     public void deleteConfigByIds(Long[] configIds)
@@ -163,7 +162,7 @@ public class SysConfigServiceImpl implements ISysConfigService
     @Override
     public void clearConfigCache()
     {
-        Collection<String> keys = redisService.keys(Constants.SYS_CONFIG_KEY + "*");
+        Collection<String> keys = redisService.keys(CacheConstants.SYS_CONFIG_KEY + "*");
         redisService.deleteObject(keys);
     }
 
@@ -203,6 +202,6 @@ public class SysConfigServiceImpl implements ISysConfigService
      */
     private String getCacheKey(String configKey)
     {
-        return Constants.SYS_CONFIG_KEY + configKey;
+        return CacheConstants.SYS_CONFIG_KEY + configKey;
     }
 }

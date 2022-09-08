@@ -75,6 +75,17 @@ public class RedisService
     }
 
     /**
+     * 获取有效时间
+     *
+     * @param key Redis键
+     * @return 有效时间
+     */
+    public long getExpire(final String key)
+    {
+        return redisTemplate.getExpire(key);
+    }
+
+    /**
      * 判断 key是否存在
      *
      * @param key 键
@@ -113,9 +124,9 @@ public class RedisService
      * @param collection 多个对象
      * @return
      */
-    public long deleteObject(final Collection collection)
+    public boolean deleteObject(final Collection collection)
     {
-        return redisTemplate.delete(collection);
+        return redisTemplate.delete(collection) > 0;
     }
 
     /**
@@ -233,8 +244,20 @@ public class RedisService
     }
 
     /**
+     * 删除Hash中的某条数据
+     *
+     * @param key Redis键
+     * @param hKey Hash键
+     * @return 是否成功
+     */
+    public boolean deleteCacheMapValue(final String key, final String hKey)
+    {
+        return redisTemplate.opsForHash().delete(key, hKey) > 0;
+    }
+
+    /**
      * 获得缓存的基本对象列表
-     * 
+     *
      * @param pattern 字符串前缀
      * @return 对象列表
      */

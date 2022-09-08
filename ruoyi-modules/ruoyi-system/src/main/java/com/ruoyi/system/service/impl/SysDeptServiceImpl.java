@@ -9,10 +9,10 @@ import org.springframework.stereotype.Service;
 import com.ruoyi.common.core.constant.UserConstants;
 import com.ruoyi.common.core.exception.ServiceException;
 import com.ruoyi.common.core.text.Convert;
-import com.ruoyi.common.core.utils.SecurityUtils;
 import com.ruoyi.common.core.utils.SpringUtils;
 import com.ruoyi.common.core.utils.StringUtils;
 import com.ruoyi.common.datascope.annotation.DataScope;
+import com.ruoyi.common.security.utils.SecurityUtils;
 import com.ruoyi.system.api.domain.SysDept;
 import com.ruoyi.system.api.domain.SysRole;
 import com.ruoyi.system.api.domain.SysUser;
@@ -49,6 +49,19 @@ public class SysDeptServiceImpl implements ISysDeptService
     }
 
     /**
+     * 查询部门树结构信息
+     * 
+     * @param dept 部门信息
+     * @return 部门树信息集合
+     */
+    @Override
+    public List<TreeSelect> selectDeptTreeList(SysDept dept)
+    {
+        List<SysDept> depts = SpringUtils.getAopProxy(this).selectDeptList(dept);
+        return buildDeptTreeSelect(depts);
+    }
+
+    /**
      * 构建前端所需要树结构
      * 
      * @param depts 部门列表
@@ -63,9 +76,8 @@ public class SysDeptServiceImpl implements ISysDeptService
         {
             tempList.add(dept.getDeptId());
         }
-        for (Iterator<SysDept> iterator = depts.iterator(); iterator.hasNext();)
+        for (SysDept dept : depts)
         {
-            SysDept dept = (SysDept) iterator.next();
             // 如果是顶级节点, 遍历该父节点的所有子节点
             if (!tempList.contains(dept.getParentId()))
             {
@@ -100,7 +112,7 @@ public class SysDeptServiceImpl implements ISysDeptService
      * @return 选中部门列表
      */
     @Override
-    public List<Integer> selectDeptListByRoleId(Long roleId)
+    public List<Long> selectDeptListByRoleId(Long roleId)
     {
         SysRole role = roleMapper.selectRoleById(roleId);
         return deptMapper.selectDeptListByRoleId(roleId, role.isDeptCheckStrictly());
@@ -140,7 +152,7 @@ public class SysDeptServiceImpl implements ISysDeptService
     public boolean hasChildByDeptId(Long deptId)
     {
         int result = deptMapper.hasChildByDeptId(deptId);
-        return result > 0 ? true : false;
+        return result > 0;
     }
 
     /**
@@ -153,7 +165,7 @@ public class SysDeptServiceImpl implements ISysDeptService
     public boolean checkDeptExistUser(Long deptId)
     {
         int result = deptMapper.checkDeptExistUser(deptId);
-        return result > 0 ? true : false;
+        return result > 0;
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.ruoyi.system.service;
 
 import java.util.List;
-
 import com.ruoyi.system.api.domain.SysDept;
 import com.ruoyi.system.domain.vo.TreeSelect;
 
@@ -19,6 +18,14 @@ public interface ISysDeptService
      * @return 部门信息集合
      */
     public List<SysDept> selectDeptList(SysDept dept);
+
+    /**
+     * 查询部门树结构信息
+     * 
+     * @param dept 部门信息
+     * @return 部门树信息集合
+     */
+    public List<TreeSelect> selectDeptTreeList(SysDept dept);
 
     /**
      * 构建前端所需要树结构
@@ -42,7 +49,7 @@ public interface ISysDeptService
      * @param roleId 角色ID
      * @return 选中部门列表
      */
-    public List<Integer> selectDeptListByRoleId(Long roleId);
+    public List<Long> selectDeptListByRoleId(Long roleId);
 
     /**
      * 根据部门ID查询信息

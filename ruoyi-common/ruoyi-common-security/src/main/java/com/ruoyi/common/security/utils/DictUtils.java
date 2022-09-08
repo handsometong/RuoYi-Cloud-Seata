@@ -2,7 +2,8 @@ package com.ruoyi.common.security.utils;
 
 import java.util.Collection;
 import java.util.List;
-import com.ruoyi.common.core.constant.Constants;
+import com.alibaba.fastjson2.JSONArray;
+import com.ruoyi.common.core.constant.CacheConstants;
 import com.ruoyi.common.core.utils.SpringUtils;
 import com.ruoyi.common.core.utils.StringUtils;
 import com.ruoyi.common.redis.service.RedisService;
@@ -34,11 +35,10 @@ public class DictUtils
      */
     public static List<SysDictData> getDictCache(String key)
     {
-        Object cacheObj = SpringUtils.getBean(RedisService.class).getCacheObject(getCacheKey(key));
-        if (StringUtils.isNotNull(cacheObj))
+        JSONArray arrayCache = SpringUtils.getBean(RedisService.class).getCacheObject(getCacheKey(key));
+        if (StringUtils.isNotNull(arrayCache))
         {
-            List<SysDictData> dictDatas = StringUtils.cast(cacheObj);
-            return dictDatas;
+            return arrayCache.toList(SysDictData.class);
         }
         return null;
     }
@@ -58,7 +58,7 @@ public class DictUtils
      */
     public static void clearDictCache()
     {
-        Collection<String> keys = SpringUtils.getBean(RedisService.class).keys(Constants.SYS_DICT_KEY + "*");
+        Collection<String> keys = SpringUtils.getBean(RedisService.class).keys(CacheConstants.SYS_DICT_KEY + "*");
         SpringUtils.getBean(RedisService.class).deleteObject(keys);
     }
 
@@ -70,6 +70,6 @@ public class DictUtils
      */
     public static String getCacheKey(String configKey)
     {
-        return Constants.SYS_DICT_KEY + configKey;
+        return CacheConstants.SYS_DICT_KEY + configKey;
     }
 }

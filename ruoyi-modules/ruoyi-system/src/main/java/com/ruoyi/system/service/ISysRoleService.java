@@ -49,7 +49,7 @@ public interface ISysRoleService
      * @param userId 用户ID
      * @return 选中角色ID列表
      */
-    public List<Integer> selectRoleListByUserId(Long userId);
+    public List<Long> selectRoleListByUserId(Long userId);
 
     /**
      * 通过角色ID查询角色
@@ -144,6 +144,7 @@ public interface ISysRoleService
      * @return 结果
      */
     public int deleteRoleByIds(Long[] roleIds);
+
     /**
      * 取消授权用户角色
      * 

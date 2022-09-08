@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.ruoyi.common.core.constant.UserConstants;
 import com.ruoyi.common.core.exception.ServiceException;
-import com.ruoyi.common.core.utils.SecurityUtils;
 import com.ruoyi.common.core.utils.SpringUtils;
 import com.ruoyi.common.core.utils.StringUtils;
 import com.ruoyi.common.datascope.annotation.DataScope;
+import com.ruoyi.common.security.utils.SecurityUtils;
 import com.ruoyi.system.api.domain.SysRole;
 import com.ruoyi.system.api.domain.SysUser;
 import com.ruoyi.system.domain.SysRoleDept;
@@ -122,7 +122,7 @@ public class SysRoleServiceImpl implements ISysRoleService
      * @return 选中角色ID列表
      */
     @Override
-    public List<Integer> selectRoleListByUserId(Long userId)
+    public List<Long> selectRoleListByUserId(Long userId)
     {
         return roleMapper.selectRoleListByUserId(userId);
     }
@@ -228,7 +228,7 @@ public class SysRoleServiceImpl implements ISysRoleService
      * @return 结果
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public int insertRole(SysRole role)
     {
         // 新增角色信息
@@ -243,7 +243,7 @@ public class SysRoleServiceImpl implements ISysRoleService
      * @return 结果
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public int updateRole(SysRole role)
     {
         // 修改角色信息
@@ -272,7 +272,7 @@ public class SysRoleServiceImpl implements ISysRoleService
      * @return 结果
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public int authDataScope(SysRole role)
     {
         // 修改角色信息
@@ -338,7 +338,7 @@ public class SysRoleServiceImpl implements ISysRoleService
      * @return 结果
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public int deleteRoleById(Long roleId)
     {
         // 删除角色与菜单关联
@@ -355,12 +355,13 @@ public class SysRoleServiceImpl implements ISysRoleService
      * @return 结果
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public int deleteRoleByIds(Long[] roleIds)
     {
         for (Long roleId : roleIds)
         {
             checkRoleAllowed(new SysRole(roleId));
+            checkRoleDataScope(roleId);
             SysRole role = selectRoleById(roleId);
             if (countUserRoleByRoleId(roleId) > 0)
             {
@@ -403,7 +404,7 @@ public class SysRoleServiceImpl implements ISysRoleService
      * 批量选择授权用户角色
      * 
      * @param roleId 角色ID
-     * @param userIds 需要删除的用户数据ID
+     * @param userIds 需要授权的用户数据ID
      * @return 结果
      */
     @Override
