@@ -567,12 +567,19 @@ public class ExcelUtil<T>
             // 得到导出对象.
             T vo = (T) list.get(i);
             Collection<?> subList = null;
-            if (isSubListValue(vo))
+            if (isSubList())
             {
-                subList = getListCellValue(vo);
-                subMergedLastRowNum = subMergedLastRowNum + subList.size();
+                if (isSubListValue(vo))
+                {
+                    subList = getListCellValue(vo);
+                    subMergedLastRowNum = subMergedLastRowNum + subList.size();
+                }
+                else
+                {
+                    subMergedFirstRowNum++;
+                    subMergedLastRowNum++;
+                }
             }
-
             int column = 0;
             for (Object[] os : fields)
             {
@@ -681,7 +688,6 @@ public class ExcelUtil<T>
             if (!headerStyles.containsKey(key))
             {
                 CellStyle style = wb.createCellStyle();
-                style = wb.createCellStyle();
                 style.cloneStyleFrom(styles.get("data"));
                 style.setAlignment(HorizontalAlignment.CENTER);
                 style.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -715,7 +721,6 @@ public class ExcelUtil<T>
             if (!styles.containsKey(key))
             {
                 CellStyle style = wb.createCellStyle();
-                style = wb.createCellStyle();
                 style.setAlignment(excel.align());
                 style.setVerticalAlignment(VerticalAlignment.CENTER);
                 style.setBorderRight(BorderStyle.THIN);
